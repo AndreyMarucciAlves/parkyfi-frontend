@@ -1,0 +1,120 @@
+.cadastro-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.cadastro-card {
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 450px;
+}
+
+.cadastro-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.cadastro-header h1 {
+  color: #667eea;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.cadastro-header p {
+  color: #666;
+  margin: 0.5rem 0 0;
+}
+
+.cadastro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group label span {
+  color: #dc2626;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #667eea;
+}
+
+.error-message {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.cadastro-button {
+  background: #667eea;
+  color: #ffffff;
+  border: none;
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.cadastro-button:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.cadastro-button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.cadastro-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.cadastro-footer p {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.cadastro-footer a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cadastro-footer a:hover {
+  text-decoration: underline;
+}
