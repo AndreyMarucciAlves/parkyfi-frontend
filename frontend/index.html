@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ParkControl - Sistema de Estacionamento</title>
+  <link rel="icon" type="image/svg+xml" href="public/favicon.svg">
+  <link rel="alternate icon" href="public/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- =====================================================================
+       1. TELA DE AUTENTICACAO (LOGIN, CADASTRO, RECUPERACAO)
+       ===================================================================== -->
+  <div id="view-auth" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
+    <div class="w-full max-w-md">
+
+      <!-- Cabecalho Institucional -->
+      <div class="text-center mb-6">
+        <img src="public/favicon.svg" alt="ParkControl Logo" class="w-12 h-12 mx-auto mb-2 rounded-xl shadow-md border border-slate-700">
+        <h1 class="text-2xl font-bold tracking-tight text-white">ParkControl</h1>
+        <p class="text-xs text-slate-400 mt-1">Sistema de Gestao Operacional de Estacionamento</p>
+      </div>
+
+      <!-- CARD 1: LOGIN -->
+      <div id="card-login" class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+        <div class="mb-5 pb-3 border-b border-slate-100">
+          <h2 class="text-base font-bold text-slate-900">Acesso ao Terminal</h2>
+          <p class="text-xs text-slate-500">Informe suas credenciais de operador</p>
+        </div>
+
+        <!-- Atalhos Rapidos de Homologacao -->
+        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 mb-4 text-xs">
+          <p class="text-[11px] font-semibold text-slate-600 mb-2">Preenchimento rapido para avaliacao:</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="btn-fill-admin" class="py-1 px-2 bg-white hover:bg-slate-100 text-slate-700 rounded border border-slate-300 font-medium transition text-center text-xs">
+              Administrador
+            </button>
+            <button type="button" id="btn-fill-operator" class="py-1 px-2 bg-white hover:bg-slate-100 text-slate-700 rounded border border-slate-300 font-medium transition text-center text-xs">
+              Operador de Caixa
+            </button>
+          </div>
+        </div>
+
+        <form id="form-login" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" for="input-login-email">E-mail</label>
+            <input type="email" id="input-login-email" required placeholder="operador@estacionamento.com"
+                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800 focus:bg-white transition">
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-slate-700" for="input-login-password">Senha</label>
+              <a href="#" data-auth-target="forgot" class="text-xs text-slate-600 hover:text-slate-900 underline">
+                Esqueceu a senha?
+              </a>
+            </div>
+            <input type="password" id="input-login-password" required placeholder="Digite sua senha"
+                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800 focus:bg-white transition">
+          </div>
+
+          <div id="msg-login" class="auth-message hidden"></div>
+
+          <button type="submit" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition">
+            Entrar no Sistema
+          </button>
+        </form>
+
+        <div class="mt-5 pt-4 border-t border-slate-100 text-center">
+          <a href="#" data-auth-target="register" class="text-xs text-slate-600 hover:text-slate-900 font-medium">
+            Cadastrar novo operador
+          </a>
+        </div>
+      </div>
+
+      <!-- CARD 2: CADASTRE-SE -->
+      <div id="card-register" class="bg-white rounded-xl shadow-lg border border-slate-200 p-6 hidden">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Novo Operador</h2>
+            <p class="text-xs text-slate-500">Crie seu usuario de acesso ao caixa</p>
+          </div>
+          <a href="#" data-auth-target="login" class="text-xs text-slate-600 hover:text-slate-900">
+            Voltar
+          </a>
+        </div>
+
+        <form id="form-register" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-name">Nome Completo</label>
+            <input type="text" id="reg-name" required placeholder="Nome do operador"
+                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-email">E-mail Corporativo</label>
+            <input type="email" id="reg-email" required placeholder="seu.email@estacionamento.com"
+                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-pass">Senha</label>
+              <input type="password" id="reg-pass" required minlength="4" placeholder="Min. 4 digitos"
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-pass-conf">Confirmar Senha</label>
+              <input type="password" id="reg-pass-conf" required minlength="4" placeholder="Repita a senha"
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
+            </div>
+          </div>
+
+          <div id="msg-register" class="auth-message hidden"></div>
+
+          <button type="submit" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition mt-2">
+            Concluir Cadastro
+          </button>
+        </form>
+
+        <div class="mt-4 text-center">
+          <a href="#" data-auth-target="login" class="text-xs text-slate-600 hover:text-slate-900">
+            Ja possui conta? Fazer login
+          </a>
+        </div>
+      </div>
+
+      <!-- CARD 3: ESQUECEU A SENHA -->
+      <div id="card-forgot" class="bg-white rounded-xl shadow-lg border border-slate-200 p-6 hidden">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Redefinicao de Senha</h2>
+            <p class="text-xs text-slate-500">Recuperacao de acesso ao sistema</p>
+          </div>
+          <a href="#" data-auth-target="login" class="text-xs text-slate-600 hover:text-slate-900">
+            Voltar
+          </a>
+        </div>
+
+        <!-- Passo 1: Informar E-mail -->
+        <div id="step-forgot-1">
+          <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+            Informe o e-mail cadastrado para gerar o codigo de autorizacao.
+          </p>
+          <form id="form-forgot-1" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-email">E-mail Cadastrado</label>
+              <input type="email" id="forgot-email" required placeholder="admin@estacionamento.com"
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-slate-800">
+            </div>
+
+            <div id="msg-forgot-1" class="auth-message hidden"></div>
+
+            <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">
+              Gerar Codigo de Verificacao
+            </button>
+          </form>
+        </div>
+
+        <!-- Passo 2: Validar Codigo -->
+        <div id="step-forgot-2" class="hidden space-y-3">
+          <div id="box-recovery-token" class="bg-slate-50 border border-slate-300 rounded-lg p-3 text-xs text-slate-700">
+            <span class="font-semibold">Codigo gerado para homologacao:</span>
+            <span id="display-recovery-code" class="font-mono font-bold text-slate-900 ml-1.5 px-2 py-0.5 bg-white border border-slate-300 rounded"></span>
+          </div>
+
+          <form id="form-forgot-2" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-code">Codigo de 6 Digitos</label>
+              <input type="text" id="forgot-code" required maxlength="6" placeholder="000000"
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-center font-mono font-bold text-sm text-slate-900 focus:ring-2 focus:ring-slate-800">
+            </div>
+
+            <div id="msg-forgot-2" class="auth-message hidden"></div>
+
+            <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">
+              Validar Codigo
+            </button>
+          </form>
+        </div>
+
+        <!-- Passo 3: Nova Senha -->
+        <div id="step-forgot-3" class="hidden space-y-3">
+          <form id="form-forgot-3" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-new-pass">Nova Senha</label>
+              <input type="password" id="forgot-new-pass" required minlength="4" placeholder="Minimo 4 digitos"
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-800">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-new-pass-conf">Confirmar Nova Senha</label>
+              <input type="password" id="forgot-new-pass-conf" required minlength="4" placeholder="Repita a nova senha"
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-800">
+            </div>
+
+            <div id="msg-forgot-3" class="auth-message hidden"></div>
+
+            <button type="submit" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg transition">
+              Atualizar Senha
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       2. TELA OPERACIONAL (DASHBOARD & PATIO)
+       ===================================================================== -->
+  <div id="view-app" class="min-h-screen flex flex-col hidden bg-slate-100">
+
+    <!-- Topbar Corporativa -->
+    <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md border-b border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-14">
+          
+          <div class="flex items-center space-x-3">
+            <img src="public/favicon.svg" alt="ParkControl Logo" class="w-7 h-7 rounded-md shadow-sm">
+            <span class="font-bold tracking-tight text-base">ParkControl</span>
+            <span class="text-xs text-slate-400 border-l border-slate-700 pl-3 hidden sm:inline">
+              Terminal Operacional de Patio
+            </span>
+          </div>
+
+          <div class="flex items-center space-x-4">
+            <span id="system-clock" class="text-xs font-mono text-slate-300 hidden md:inline">--:--:--</span>
+            
+            <div class="text-right text-xs">
+              <span id="header-user-name" class="font-semibold text-white block leading-tight">Operador</span>
+              <span id="header-user-role" class="text-[10px] text-slate-400">Caixa</span>
+            </div>
+
+            <button id="btn-logout" class="text-xs text-slate-300 hover:text-white px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+              Sair
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Barra de Abas de Navegacao com Destaque Nítido -->
+      <div class="bg-slate-800 border-t border-slate-700/80 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex space-x-1.5 py-1.5 text-xs">
+            <button data-view-tab="map" class="tab-btn tab-btn-active px-3.5 py-1.5 rounded-md text-xs font-semibold transition">
+              Mapa de Vagas
+            </button>
+            <button data-view-tab="table" class="tab-btn tab-btn-inactive px-3.5 py-1.5 rounded-md text-xs font-semibold transition">
+              Veiculos Estacionados
+            </button>
+            <button data-view-tab="history" class="tab-btn tab-btn-inactive px-3.5 py-1.5 rounded-md text-xs font-semibold transition">
+              Historico de Cobranca
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteudo Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+
+      <!-- Metricas Operacionais (KPIs) -->
+      <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total de Vagas</p>
+          <p id="stat-total" class="text-2xl font-bold text-slate-900 mt-0.5">24</p>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Vagas Ocupadas</p>
+          <p id="stat-occupied" class="text-2xl font-bold text-red-700 mt-0.5">0</p>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Vagas Livres</p>
+          <p id="stat-free" class="text-2xl font-bold text-emerald-700 mt-0.5">0</p>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Faturado Hoje</p>
+          <p id="stat-revenue" class="text-2xl font-bold text-slate-900 mt-0.5">R$ 0,00</p>
+        </div>
+      </section>
+
+      <!-- BARRA DE ACAO E FILTROS PERSISTENTE (Acompanha todos os menus e abas) -->
+      <section class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        
+        <!-- Filtros de Secao -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto text-xs pb-1 md:pb-0">
+          <span class="text-slate-400 font-semibold uppercase text-[10px] mr-1">Secao:</span>
+          <button data-filter-sec="all" class="btn-sec-filter btn-sec-active px-3 py-1.5 rounded-md border text-xs transition">
+            Todas
+          </button>
+          <button data-filter-sec="A" class="btn-sec-filter btn-sec-inactive px-3 py-1.5 rounded-md border text-xs transition">
+            Secao A (Terreo)
+          </button>
+          <button data-filter-sec="B" class="btn-sec-filter btn-sec-inactive px-3 py-1.5 rounded-md border text-xs transition">
+            Secao B (Subsolo)
+          </button>
+          <button data-filter-sec="C" class="btn-sec-filter btn-sec-inactive px-3 py-1.5 rounded-md border text-xs transition">
+            Secao C (Patio)
+          </button>
+        </div>
+
+        <!-- Busca Unificada e Botao de Entrada -->
+        <div class="flex items-center space-x-2">
+          <div class="relative w-full md:w-64">
+            <input type="text" id="global-search-input" placeholder="Buscar placa, vaga ou condutor..."
+                   class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-800 transition">
+          </div>
+
+          <button id="btn-open-checkin" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-1.5 px-3.5 rounded-md shadow-sm transition whitespace-nowrap">
+            + Entrada de Veiculo
+          </button>
+        </div>
+
+      </section>
+
+      <!-- PAINEL 1: MAPA DE VAGAS -->
+      <section id="tab-panel-map" class="space-y-3">
+        <div id="grid-spots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <!-- Renderizado via app.js -->
+        </div>
+      </section>
+
+      <!-- PAINEL 2: TABELA DE VEICULOS ATIVOS -->
+      <section id="tab-panel-table" class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden hidden">
+        <div class="p-3 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Veiculos no Patio</h3>
+          <span class="text-xs text-slate-500">Controle em tempo real de permanencia</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Vaga</th>
+                <th class="py-2.5 px-3">Placa</th>
+                <th class="py-2.5 px-3">Cliente</th>
+                <th class="py-2.5 px-3">Secao</th>
+                <th class="py-2.5 px-3">Horario Entrada</th>
+                <th class="py-2.5 px-3">Permanencia</th>
+                <th class="py-2.5 px-3 text-right">Acao</th>
+              </tr>
+            </thead>
+            <tbody id="table-active-body">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PAINEL 3: HISTORICO FINANCEIRO -->
+      <section id="tab-panel-history" class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden hidden">
+        <div class="p-3 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Historico de Saidas e Pagamentos</h3>
+          <span class="text-xs text-slate-500">Registros do dia</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Ticket</th>
+                <th class="py-2.5 px-3">Placa</th>
+                <th class="py-2.5 px-3">Cliente</th>
+                <th class="py-2.5 px-3">Vaga</th>
+                <th class="py-2.5 px-3">Tempo</th>
+                <th class="py-2.5 px-3">Valor Cobrado</th>
+                <th class="py-2.5 px-3">Pagamento</th>
+              </tr>
+            </thead>
+            <tbody id="table-history-body">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Rodape Institucional -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-400">
+      ParkControl - Terminal Operacional de Estacionamento
+    </footer>
+
+  </div>
+
+  <!-- =====================================================================
+       MODAL 1: ENTRADA DE VEICULO (CHECK-IN)
+       ===================================================================== -->
+  <div id="modal-checkin" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden p-4">
+    <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-slate-200">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Entrada de Veiculo</h3>
+        <button data-close-modal="modal-checkin" class="text-slate-400 hover:text-slate-700 font-bold text-sm">
+          Fechar
+        </button>
+      </div>
+
+      <form id="form-checkin" class="space-y-3">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" for="checkin-plate">Placa do Veiculo *</label>
+          <input type="text" id="checkin-plate" required placeholder="ABC1D23" maxlength="8"
+                 class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-mono font-bold uppercase focus:ring-2 focus:ring-slate-800">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" for="checkin-spot-id">Vaga / Secao *</label>
+          <select id="checkin-spot-id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-800">
+            <!-- Populado via app.js -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1" for="checkin-client">Nome do Cliente / Condutor</label>
+          <input type="text" id="checkin-client" placeholder="Opcional (padrao: Cliente Avulso)"
+                 class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-800">
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" data-close-modal="modal-checkin" class="w-1/3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-xs transition">
+            Cancelar
+          </button>
+          <button type="submit" class="w-2/3 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-xs transition shadow-sm">
+            Confirmar Entrada
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 2: SAIDA E COBRANCA (CHECK-OUT DIRETO NO FRONTEND)
+       ===================================================================== -->
+  <div id="modal-checkout" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden p-4">
+    <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-slate-200">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Saida e Cobranca</h3>
+          <p class="text-[11px] text-slate-500">Ticket: <span id="checkout-ticket" class="font-mono font-bold text-slate-800"></span></p>
+        </div>
+        <button data-close-modal="modal-checkout" class="text-slate-400 hover:text-slate-700 font-bold text-sm">
+          Fechar
+        </button>
+      </div>
+
+      <!-- Resumo da Permanencia -->
+      <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 text-xs space-y-1.5 mb-3">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Placa:</span>
+          <span id="checkout-plate" class="font-mono font-bold text-slate-900"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Vaga:</span>
+          <span id="checkout-spot" class="font-bold text-slate-900"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Cliente:</span>
+          <span id="checkout-client" class="text-slate-800"></span>
+        </div>
+        <div class="flex justify-between border-t border-slate-200 pt-1">
+          <span class="text-slate-500">Entrada:</span>
+          <span id="checkout-entry" class="text-slate-700"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Saida:</span>
+          <span id="checkout-exit" class="text-slate-700"></span>
+        </div>
+        <div class="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200">
+          <span>Tempo Total:</span>
+          <span id="checkout-duration" class="font-mono text-red-700"></span>
+        </div>
+      </div>
+
+      <!-- Calculo da Tarifa -->
+      <div class="bg-slate-100 rounded-lg p-3 border border-slate-300 text-xs mb-3">
+        <p class="text-slate-600 mb-1">Regra de calculo:</p>
+        <p id="checkout-rule" class="text-slate-800 font-medium"></p>
+        
+        <div class="flex justify-between items-baseline mt-2 pt-2 border-t border-slate-200">
+          <span class="text-slate-700 font-bold uppercase text-[11px]">Valor a Cobrar:</span>
+          <span id="checkout-total" class="text-lg font-black text-emerald-800 font-mono"></span>
+        </div>
+      </div>
+
+      <!-- Forma de Pagamento -->
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-slate-700 mb-1" for="checkout-payment">Forma de Pagamento</label>
+        <select id="checkout-payment" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-800">
+          <option value="Pix">Pix (Transferencia Instantanea)</option>
+          <option value="Cartao de Debito">Cartao de Debito</option>
+          <option value="Cartao de Credito">Cartao de Credito</option>
+          <option value="Dinheiro">Dinheiro em Especie</option>
+        </select>
+      </div>
+
+      <div class="flex gap-2">
+        <button type="button" data-close-modal="modal-checkout" class="w-1/3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-xs transition">
+          Cancelar
+        </button>
+        <button type="button" id="btn-confirm-checkout" class="w-2/3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-lg text-xs transition shadow-sm">
+          Confirmar e Liberar Vaga
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts Modulares -->
+  <script src="js/data.js"></script>
+  <script src="js/tariff.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

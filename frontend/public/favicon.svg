@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="pGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Shape -->
+  <rect width="64" height="64" rx="14" fill="url(#pGrad)"/>
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="none" stroke="#334155" stroke-width="2"/>
+  
+  <!-- Estilizacao da Letra P (Estacionamento / Parking) -->
+  <path d="M22 16 H36 C42.6 16 47 20 47 26.5 C47 33 42.6 37 36 37 H29 V48 H22 Z M29 22 V31 H35.5 C38.8 31 40.5 29.5 40.5 26.5 C40.5 23.5 38.8 22 35.5 22 Z" fill="#ffffff"/>
+  
+  <!-- Marcador de precisao / indicador de vaga -->
+  <circle cx="45" cy="46" r="3.5" fill="#10b981"/>
+</svg>

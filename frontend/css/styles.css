@@ -1,0 +1,71 @@
+/* Estilos da Interface ParkControl */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;700&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.font-mono {
+  font-family: 'Roboto Mono', monospace;
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Abas de Navegacao Superior */
+.tab-btn-active {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.tab-btn-inactive {
+  background-color: transparent !important;
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+.tab-btn-inactive:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+/* Botoes de Filtro de Secao */
+.btn-sec-active {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.btn-sec-inactive {
+  background-color: #ffffff !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+.btn-sec-inactive:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Transicoes suaves */
+.spot-card-item {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.spot-card-item:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+}
