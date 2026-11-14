@@ -5,8 +5,6 @@
 
 const STORAGE_KEY_SPOTS = 'park_system_spots_v2';
 const STORAGE_KEY_HISTORY = 'park_system_history_v2';
-const STORAGE_KEY_USERS = 'park_system_users_v2';
-const STORAGE_KEY_SESSION = 'park_system_session_v2';
 
 function createInitialSpots() {
   const spots = [];
@@ -59,23 +57,6 @@ function createInitialSpots() {
 
   return spots;
 }
-
-const DEFAULT_USERS = [
-  {
-    id: 'usr-1',
-    name: 'Administrador',
-    email: 'admin@estacionamento.com',
-    password: 'admin',
-    role: 'Administrador',
-  },
-  {
-    id: 'usr-2',
-    name: 'Operador de Patio',
-    email: 'operador@estacionamento.com',
-    password: 'operador',
-    role: 'Operador',
-  },
-];
 
 const DEFAULT_HISTORY = [
   {
@@ -130,32 +111,6 @@ class StorageManager {
 
   static saveHistory(history) {
     localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
-  }
-
-  static getUsers() {
-    const raw = localStorage.getItem(STORAGE_KEY_USERS);
-    if (!raw) {
-      this.saveUsers(DEFAULT_USERS);
-      return DEFAULT_USERS;
-    }
-    return JSON.parse(raw);
-  }
-
-  static saveUsers(users) {
-    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
-  }
-
-  static getSession() {
-    const raw = localStorage.getItem(STORAGE_KEY_SESSION);
-    return raw ? JSON.parse(raw) : null;
-  }
-
-  static saveSession(user) {
-    if (user) {
-      localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(STORAGE_KEY_SESSION);
-    }
   }
 }
 

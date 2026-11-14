@@ -1,13 +1,10 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { clienteService, veiculoService } from '../services/estacionamento';
 import type { Cliente, Veiculo } from '../types/estacionamento';
 import './Dashboard.css';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'clientes' | 'veiculos'>('clientes');
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
@@ -31,25 +28,12 @@ export default function Dashboard() {
 
   const veiculosNoEstacionamento = veiculos.filter((v) => !v.saida);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div className="brand">
           <span className="logo-text">Parkfy</span>
           <span className="subtitle">Sistema de Gerenciamento de Estacionamento</span>
-        </div>
-        <div className="user-actions">
-          <span className="user-info">
-            Bem-vindo, {user?.name}
-          </span>
-          <button className="logout-button" onClick={handleLogout}>
-            Sair
-          </button>
         </div>
       </header>
 

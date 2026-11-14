@@ -85,32 +85,6 @@
   transition: background 0.2s;
 }
 
-.login-button:hover:not(:disabled) {
+.login-button:hover {
   background: #5568d3;
-}
-
-.login-button:disabled {
-  background: #999;
-  cursor: not-allowed;
-}
-
-.login-footer {
-  margin-top: 1.5rem;
-  text-align: center;
-}
-
-.login-footer p {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-.login-footer a {
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.login-footer a:hover {
-  text-decoration: underline;
 }

@@ -16,223 +16,31 @@ const App = {
   clockTimer: null,
 
   init() {
-    this.setupAuthUI();
+    this.setupLoginUI();
     this.setupAppUI();
-    this.checkSession();
     this.startClock();
   },
 
   /* -------------------------------------------------------------------------
-   * AUTENTICACAO
+   * LOGIN DE DEMONSTRACAO
+   * Nao ha autenticacao: o navegador valida o e-mail (type="email" + required)
+   * e o envio do formulario apenas exibe a tela operacional.
    * ------------------------------------------------------------------------- */
-  checkSession() {
-    const user = window.authService.getCurrentSession();
-    if (user) {
-      this.showApp(user);
-    } else {
-      this.showAuth();
-    }
-  },
-
-  showAuth() {
-    document.getElementById('view-auth').classList.remove('hidden');
-    document.getElementById('view-app').classList.add('hidden');
-    this.switchAuthTab('login');
-  },
-
-  showApp(user) {
-    document.getElementById('view-auth').classList.add('hidden');
-    document.getElementById('view-app').classList.remove('hidden');
-
-    document.getElementById('header-user-name').textContent = user.name;
-    document.getElementById('header-user-role').textContent = user.role || 'Operador';
-
-    this.switchViewTab(this.currentTab);
-    this.render();
-  },
-
-  switchAuthTab(tab) {
-    const panels = ['login', 'register', 'forgot'];
-    panels.forEach(p => {
-      const el = document.getElementById(`card-${p}`);
-      if (el) {
-        if (p === tab) {
-          el.classList.remove('hidden');
-        } else {
-          el.classList.add('hidden');
-        }
-      }
-    });
-    this.clearAuthMessage();
-  },
-
-  setAuthMessage(targetId, text, isError = true) {
-    const el = document.getElementById(targetId);
-    if (!el) return;
-    el.textContent = text;
-    el.className = `p-3 rounded text-xs font-medium border ${
-      isError 
-        ? 'bg-red-50 text-red-800 border-red-200' 
-        : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-    }`;
-    el.classList.remove('hidden');
-  },
-
-  clearAuthMessage() {
-    document.querySelectorAll('.auth-message').forEach(el => {
-      el.textContent = '';
-      el.classList.add('hidden');
-    });
-  },
-
-  setupAuthUI() {
-    // Links entre login, cadastro e esqueci a senha
-    document.querySelectorAll('[data-auth-target]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = btn.getAttribute('data-auth-target');
-        this.switchAuthTab(target);
-      });
-    });
-
-    // Formulario de Login
+  setupLoginUI() {
     const formLogin = document.getElementById('form-login');
     if (formLogin) {
       formLogin.addEventListener('submit', (e) => {
         e.preventDefault();
-        const email = document.getElementById('input-login-email').value;
-        const pass = document.getElementById('input-login-password').value;
-
-        const res = window.authService.login(email, pass);
-        if (res.success) {
-          this.showApp(res.user);
-        } else {
-          this.setAuthMessage('msg-login', res.message, true);
-        }
+        this.showApp();
       });
     }
+  },
 
-    // Atalhos de teste
-    const btnDemoAdmin = document.getElementById('btn-fill-admin');
-    if (btnDemoAdmin) {
-      btnDemoAdmin.addEventListener('click', () => {
-        document.getElementById('input-login-email').value = 'admin@estacionamento.com';
-        document.getElementById('input-login-password').value = 'admin';
-      });
-    }
-
-    const btnDemoOp = document.getElementById('btn-fill-operator');
-    if (btnDemoOp) {
-      btnDemoOp.addEventListener('click', () => {
-        document.getElementById('input-login-email').value = 'operador@estacionamento.com';
-        document.getElementById('input-login-password').value = 'operador';
-      });
-    }
-
-    // Formulario de Registro
-    const formRegister = document.getElementById('form-register');
-    if (formRegister) {
-      formRegister.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value;
-        const pass = document.getElementById('reg-pass').value;
-        const passConf = document.getElementById('reg-pass-conf').value;
-
-        const res = window.authService.register({
-          name,
-          email,
-          password: pass,
-          confirmPassword: passConf,
-        });
-
-        if (res.success) {
-          this.setAuthMessage('msg-register', res.message, false);
-          formRegister.reset();
-          setTimeout(() => {
-            this.switchAuthTab('login');
-            document.getElementById('input-login-email').value = email;
-            this.setAuthMessage('msg-login', 'Cadastro realizado. Digite sua senha para entrar.', false);
-          }, 900);
-        } else {
-          this.setAuthMessage('msg-register', res.message, true);
-        }
-      });
-    }
-
-    // Recuperacao de Senha - Passo 1
-    const formForgot1 = document.getElementById('form-forgot-1');
-    if (formForgot1) {
-      formForgot1.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('forgot-email').value;
-        const res = window.authService.requestPasswordReset(email);
-
-        if (res.success) {
-          document.getElementById('step-forgot-1').classList.add('hidden');
-          document.getElementById('step-forgot-2').classList.remove('hidden');
-          document.getElementById('display-recovery-code').textContent = res.code;
-          document.getElementById('box-recovery-token').classList.remove('hidden');
-        } else {
-          this.setAuthMessage('msg-forgot-1', res.message, true);
-        }
-      });
-    }
-
-    // Recuperacao de Senha - Passo 2
-    const formForgot2 = document.getElementById('form-forgot-2');
-    if (formForgot2) {
-      formForgot2.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const code = document.getElementById('forgot-code').value;
-        const res = window.authService.verifyResetCode(code);
-
-        if (res.success) {
-          document.getElementById('step-forgot-2').classList.add('hidden');
-          document.getElementById('step-forgot-3').classList.remove('hidden');
-        } else {
-          this.setAuthMessage('msg-forgot-2', res.message, true);
-        }
-      });
-    }
-
-    // Recuperacao de Senha - Passo 3
-    const formForgot3 = document.getElementById('form-forgot-3');
-    if (formForgot3) {
-      formForgot3.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const p1 = document.getElementById('forgot-new-pass').value;
-        const p2 = document.getElementById('forgot-new-pass-conf').value;
-        const res = window.authService.resetPassword(p1, p2);
-
-        if (res.success) {
-          this.setAuthMessage('msg-forgot-3', res.message, false);
-          setTimeout(() => {
-            document.getElementById('step-forgot-1').classList.remove('hidden');
-            document.getElementById('step-forgot-2').classList.add('hidden');
-            document.getElementById('step-forgot-3').classList.add('hidden');
-            formForgot1.reset();
-            formForgot2.reset();
-            formForgot3.reset();
-            this.switchAuthTab('login');
-            this.setAuthMessage('msg-login', 'Senha redefinida com sucesso. Entre com sua nova senha.', false);
-          }, 1100);
-        } else {
-          this.setAuthMessage('msg-forgot-3', res.message, true);
-        }
-      });
-    }
-
-    // Logout
-    const btnLogout = document.getElementById('btn-logout');
-    if (btnLogout) {
-      btnLogout.addEventListener('click', () => {
-        if (confirm('Deseja encerrar a sessao atual?')) {
-          window.authService.logout();
-          this.showAuth();
-        }
-      });
-    }
+  showApp() {
+    document.getElementById('view-login').classList.add('hidden');
+    document.getElementById('view-app').classList.remove('hidden');
+    this.switchViewTab(this.currentTab);
+    this.render();
   },
 
   /* -------------------------------------------------------------------------

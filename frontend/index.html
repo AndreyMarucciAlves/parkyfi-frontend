@@ -12,9 +12,9 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
 
   <!-- =====================================================================
-       1. TELA DE AUTENTICACAO (LOGIN, CADASTRO, RECUPERACAO)
+       1. TELA DE LOGIN (DEMONSTRACAO)
        ===================================================================== -->
-  <div id="view-auth" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
+  <div id="view-login" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
     <div class="w-full max-w-md">
 
       <!-- Cabecalho Institucional -->
@@ -24,24 +24,11 @@
         <p class="text-xs text-slate-400 mt-1">Sistema de Gestao Operacional de Estacionamento</p>
       </div>
 
-      <!-- CARD 1: LOGIN -->
+      <!-- LOGIN DE DEMONSTRACAO: sem autenticacao, apenas valida o formato do e-mail -->
       <div id="card-login" class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
         <div class="mb-5 pb-3 border-b border-slate-100">
           <h2 class="text-base font-bold text-slate-900">Acesso ao Terminal</h2>
-          <p class="text-xs text-slate-500">Informe suas credenciais de operador</p>
-        </div>
-
-        <!-- Atalhos Rapidos de Homologacao -->
-        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 mb-4 text-xs">
-          <p class="text-[11px] font-semibold text-slate-600 mb-2">Preenchimento rapido para avaliacao:</p>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" id="btn-fill-admin" class="py-1 px-2 bg-white hover:bg-slate-100 text-slate-700 rounded border border-slate-300 font-medium transition text-center text-xs">
-              Administrador
-            </button>
-            <button type="button" id="btn-fill-operator" class="py-1 px-2 bg-white hover:bg-slate-100 text-slate-700 rounded border border-slate-300 font-medium transition text-center text-xs">
-              Operador de Caixa
-            </button>
-          </div>
+          <p class="text-xs text-slate-500">Informe seu e-mail de operador</p>
         </div>
 
         <form id="form-login" class="space-y-3.5">
@@ -51,160 +38,10 @@
                    class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800 focus:bg-white transition">
           </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="block text-xs font-semibold text-slate-700" for="input-login-password">Senha</label>
-              <a href="#" data-auth-target="forgot" class="text-xs text-slate-600 hover:text-slate-900 underline">
-                Esqueceu a senha?
-              </a>
-            </div>
-            <input type="password" id="input-login-password" required placeholder="Digite sua senha"
-                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800 focus:bg-white transition">
-          </div>
-
-          <div id="msg-login" class="auth-message hidden"></div>
-
           <button type="submit" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition">
             Entrar no Sistema
           </button>
         </form>
-
-        <div class="mt-5 pt-4 border-t border-slate-100 text-center">
-          <a href="#" data-auth-target="register" class="text-xs text-slate-600 hover:text-slate-900 font-medium">
-            Cadastrar novo operador
-          </a>
-        </div>
-      </div>
-
-      <!-- CARD 2: CADASTRE-SE -->
-      <div id="card-register" class="bg-white rounded-xl shadow-lg border border-slate-200 p-6 hidden">
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-          <div>
-            <h2 class="text-base font-bold text-slate-900">Novo Operador</h2>
-            <p class="text-xs text-slate-500">Crie seu usuario de acesso ao caixa</p>
-          </div>
-          <a href="#" data-auth-target="login" class="text-xs text-slate-600 hover:text-slate-900">
-            Voltar
-          </a>
-        </div>
-
-        <form id="form-register" class="space-y-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-name">Nome Completo</label>
-            <input type="text" id="reg-name" required placeholder="Nome do operador"
-                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-email">E-mail Corporativo</label>
-            <input type="email" id="reg-email" required placeholder="seu.email@estacionamento.com"
-                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-pass">Senha</label>
-              <input type="password" id="reg-pass" required minlength="4" placeholder="Min. 4 digitos"
-                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" for="reg-pass-conf">Confirmar Senha</label>
-              <input type="password" id="reg-pass-conf" required minlength="4" placeholder="Repita a senha"
-                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-slate-800">
-            </div>
-          </div>
-
-          <div id="msg-register" class="auth-message hidden"></div>
-
-          <button type="submit" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition mt-2">
-            Concluir Cadastro
-          </button>
-        </form>
-
-        <div class="mt-4 text-center">
-          <a href="#" data-auth-target="login" class="text-xs text-slate-600 hover:text-slate-900">
-            Ja possui conta? Fazer login
-          </a>
-        </div>
-      </div>
-
-      <!-- CARD 3: ESQUECEU A SENHA -->
-      <div id="card-forgot" class="bg-white rounded-xl shadow-lg border border-slate-200 p-6 hidden">
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-          <div>
-            <h2 class="text-base font-bold text-slate-900">Redefinicao de Senha</h2>
-            <p class="text-xs text-slate-500">Recuperacao de acesso ao sistema</p>
-          </div>
-          <a href="#" data-auth-target="login" class="text-xs text-slate-600 hover:text-slate-900">
-            Voltar
-          </a>
-        </div>
-
-        <!-- Passo 1: Informar E-mail -->
-        <div id="step-forgot-1">
-          <p class="text-xs text-slate-600 mb-3 leading-relaxed">
-            Informe o e-mail cadastrado para gerar o codigo de autorizacao.
-          </p>
-          <form id="form-forgot-1" class="space-y-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-email">E-mail Cadastrado</label>
-              <input type="email" id="forgot-email" required placeholder="admin@estacionamento.com"
-                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-slate-800">
-            </div>
-
-            <div id="msg-forgot-1" class="auth-message hidden"></div>
-
-            <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">
-              Gerar Codigo de Verificacao
-            </button>
-          </form>
-        </div>
-
-        <!-- Passo 2: Validar Codigo -->
-        <div id="step-forgot-2" class="hidden space-y-3">
-          <div id="box-recovery-token" class="bg-slate-50 border border-slate-300 rounded-lg p-3 text-xs text-slate-700">
-            <span class="font-semibold">Codigo gerado para homologacao:</span>
-            <span id="display-recovery-code" class="font-mono font-bold text-slate-900 ml-1.5 px-2 py-0.5 bg-white border border-slate-300 rounded"></span>
-          </div>
-
-          <form id="form-forgot-2" class="space-y-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-code">Codigo de 6 Digitos</label>
-              <input type="text" id="forgot-code" required maxlength="6" placeholder="000000"
-                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-center font-mono font-bold text-sm text-slate-900 focus:ring-2 focus:ring-slate-800">
-            </div>
-
-            <div id="msg-forgot-2" class="auth-message hidden"></div>
-
-            <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition">
-              Validar Codigo
-            </button>
-          </form>
-        </div>
-
-        <!-- Passo 3: Nova Senha -->
-        <div id="step-forgot-3" class="hidden space-y-3">
-          <form id="form-forgot-3" class="space-y-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-new-pass">Nova Senha</label>
-              <input type="password" id="forgot-new-pass" required minlength="4" placeholder="Minimo 4 digitos"
-                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-800">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" for="forgot-new-pass-conf">Confirmar Nova Senha</label>
-              <input type="password" id="forgot-new-pass-conf" required minlength="4" placeholder="Repita a nova senha"
-                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-800">
-            </div>
-
-            <div id="msg-forgot-3" class="auth-message hidden"></div>
-
-            <button type="submit" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg transition">
-              Atualizar Senha
-            </button>
-          </form>
-        </div>
-
       </div>
 
     </div>
@@ -230,15 +67,6 @@
 
           <div class="flex items-center space-x-4">
             <span id="system-clock" class="text-xs font-mono text-slate-300 hidden md:inline">--:--:--</span>
-            
-            <div class="text-right text-xs">
-              <span id="header-user-name" class="font-semibold text-white block leading-tight">Operador</span>
-              <span id="header-user-role" class="text-[10px] text-slate-400">Caixa</span>
-            </div>
-
-            <button id="btn-logout" class="text-xs text-slate-300 hover:text-white px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
-              Sair
-            </button>
           </div>
 
         </div>
@@ -518,7 +346,6 @@
   <!-- Scripts Modulares -->
   <script src="js/data.js"></script>
   <script src="js/tariff.js"></script>
-  <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 
 </body>

@@ -31,33 +31,6 @@
   margin-left: 0.5rem;
 }
 
-.user-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.user-info {
-  color: #334155;
-  font-weight: 500;
-}
-
-.logout-button {
-  background: #ef4444;
-  color: #ffffff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.logout-button:hover {
-  background: #dc2626;
-}
-
 .dashboard-main {
   padding: 2rem;
   max-width: 1200px;

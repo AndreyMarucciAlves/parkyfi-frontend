@@ -1,34 +1,14 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import type { LoginRequest } from '../types/auth';
 import './Login.css';
 
+// Tela de login apenas visual (demonstracao): nao ha autenticacao no sistema.
+// O navegador valida o formato do e-mail (type="email" + required) e o envio leva ao painel.
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuth();
-  const [form, setForm] = useState<LoginRequest>({ email: '', password: '' });
-  const [error, setError] = useState('');
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    try {
-      await login(form);
-      navigate('/');
-    } catch (err: any) {
-      if (err.response?.status === 401 || err.response?.status === 400) {
-        setError('E-mail ou senha inválidos. Tente novamente.');
-        return;
-      }
-      setError('Erro ao fazer login. Tente novamente.');
-    }
+    navigate('/');
   };
 
   return (
@@ -47,41 +27,15 @@ export default function Login() {
               name="email"
               id="email"
               placeholder="seu@email.com"
-              value={form.email}
-              onChange={handleChange}
               required
               autoComplete="email"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Senha</label>
-            <input
-              type="password"
-              name="password"
-              id="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
-          {error && <div className="error-message">{error}</div>}
-
-          <button
-            type="submit"
-            className="login-button"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Entrando...' : 'Entrar'}
+          <button type="submit" className="login-button">
+            Entrar
           </button>
         </form>
-
-        <div className="login-footer">
-          <p>Não tem uma conta? <a href="/cadastro">Cadastre-se</a></p>
-        </div>
       </div>
     </div>
   );
