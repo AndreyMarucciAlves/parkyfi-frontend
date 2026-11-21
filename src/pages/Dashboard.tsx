@@ -81,6 +81,22 @@ function ClientesSection({
   carregarDados: () => void;
   loading: boolean;
 }) {
+  const [excluindoId, setExcluindoId] = useState<number | null>(null);
+
+  const excluirCliente = async (id: number) => {
+    if (!window.confirm('Deseja excluir este cliente?')) return;
+    setExcluindoId(id);
+    try {
+      await clienteService.deletar(id);
+      carregarDados();
+    } catch (err) {
+      console.error('Erro ao excluir cliente:', err);
+      alert('Erro ao excluir cliente.');
+    } finally {
+      setExcluindoId(null);
+    }
+  };
+
   return (
     <section className="section-clientes">
       <div className="section-header">
@@ -122,13 +138,10 @@ function ClientesSection({
                   </Link>
                   <button
                     className="btn-delete"
-                    onClick={() => {
-                      if (window.confirm('Deseja excluir este cliente?')) {
-                        // TODO: implementar exclusão
-                      }
-                    }}
+                    disabled={excluindoId === cliente.id}
+                    onClick={() => excluirCliente(cliente.id!)}
                   >
-                    Excluir
+                    {excluindoId === cliente.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </td>
               </tr>
@@ -151,6 +164,37 @@ function VeiculosSection({
   carregarDados: () => void;
   loading: boolean;
 }) {
+  const [registrandoSaidaId, setRegistrandoSaidaId] = useState<number | null>(null);
+  const [excluindoVeiculoId, setExcluindoVeiculoId] = useState<number | null>(null);
+
+  const registrarSaida = async (id: number) => {
+    if (!window.confirm('Confirmar saída do veículo?')) return;
+    setRegistrandoSaidaId(id);
+    try {
+      await veiculoService.registrarSaida(id);
+      carregarDados();
+    } catch (err) {
+      console.error('Erro ao registrar saída:', err);
+      alert('Erro ao registrar saída.');
+    } finally {
+      setRegistrandoSaidaId(null);
+    }
+  };
+
+  const excluirVeiculo = async (id: number) => {
+    if (!window.confirm('Deseja excluir este veículo?')) return;
+    setExcluindoVeiculoId(id);
+    try {
+      await veiculoService.deletar(id);
+      carregarDados();
+    } catch (err) {
+      console.error('Erro ao excluir veículo:', err);
+      alert('Erro ao excluir veículo.');
+    } finally {
+      setExcluindoVeiculoId(null);
+    }
+  };
+
   return (
     <section className="section-veiculos">
       <div className="section-header">
@@ -216,22 +260,35 @@ function VeiculosSection({
                     <>
                       <button
                         className="btn-saida"
-                        onClick={() => {
-                          if (window.confirm('Confirmar saída do veículo?')) {
-                            // TODO: implementar saída via API
-                          }
-                        }}
+                        disabled={registrandoSaidaId === veiculo.id}
+                        onClick={() => registrarSaida(veiculo.id!)}
                       >
-                        Registrar Saída
+                        {registrandoSaidaId === veiculo.id ? 'Processando...' : 'Registrar Saída'}
                       </button>
                       <Link to={`/cadastro-veiculo/${veiculo.id}`} className="btn-edit">
                         Editar
                       </Link>
+                      <button
+                        className="btn-delete"
+                        disabled={excluindoVeiculoId === veiculo.id}
+                        onClick={() => excluirVeiculo(veiculo.id!)}
+                      >
+                        {excluindoVeiculoId === veiculo.id ? 'Excluindo...' : 'Excluir'}
+                      </button>
                     </>
                   ) : (
-                    <Link to={`/cadastro-veiculo/${veiculo.id}`} className="btn-edit">
-                      Editar
-                    </Link>
+                    <>
+                      <Link to={`/cadastro-veiculo/${veiculo.id}`} className="btn-edit">
+                        Editar
+                      </Link>
+                      <button
+                        className="btn-delete"
+                        disabled={excluindoVeiculoId === veiculo.id}
+                        onClick={() => excluirVeiculo(veiculo.id!)}
+                      >
+                        {excluindoVeiculoId === veiculo.id ? 'Excluindo...' : 'Excluir'}
+                      </button>
+                    </>
                   )}
                 </td>
               </tr>
