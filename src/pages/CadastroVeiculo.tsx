@@ -24,13 +24,8 @@ export default function CadastroVeiculo() {
       setLoading(true);
       setError('');
       try {
-        const tiposResponse = await tipoVeiculoService.listar({
-          page: 0,
-          size: 100,
-          direction: 'ASC',
-          orderBy: 'descricao',
-        });
-        setTiposVeiculo(tiposResponse.data);
+        const tipos = await tipoVeiculoService.listarOpcoes();
+        setTiposVeiculo(tipos);
 
         if (isEdit && id) {
           const veiculo = await veiculoService.buscarPorId(Number(id));
@@ -38,8 +33,8 @@ export default function CadastroVeiculo() {
           setModelo(veiculo.modelo ?? '');
           setCor(veiculo.cor ?? '');
           setIdTipoVeiculo(String(veiculo.idTipoVeiculo));
-        } else if (tiposResponse.data.length > 0 && tiposResponse.data[0]?.id) {
-          setIdTipoVeiculo(String(tiposResponse.data[0].id));
+        } else if (tipos[0]?.id) {
+          setIdTipoVeiculo(String(tipos[0].id));
         }
       } catch (err) {
         setError(getApiErrorMessage(err, 'Erro ao carregar dados do veículo.'));

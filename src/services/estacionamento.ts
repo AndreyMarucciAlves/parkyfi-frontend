@@ -1,7 +1,8 @@
-import { api } from './api';
+import { api, getDeduplicado } from './api';
 import type {
   DadosTicketSaida,
   FilterPageable,
+  IndicadoresDashboard,
   ResponsePagedCommom,
   Ticket,
   TicketEntradaRequest,
@@ -10,16 +11,20 @@ import type {
   Veiculo,
 } from '../types/estacionamento';
 
-export const tipoVeiculoService = {
-  listar: async (params: FilterPageable): Promise<ResponsePagedCommom<TipoVeiculo>> => {
-    const response = await api.get<ResponsePagedCommom<TipoVeiculo>>('/tipo-veiculo', { params });
-    return response.data;
-  },
+export const dashboardService = {
+  buscarIndicadores: (): Promise<IndicadoresDashboard> =>
+    getDeduplicado<IndicadoresDashboard>('/dashboard/indicadores', {}),
+};
 
-  buscarPorId: async (id: number): Promise<TipoVeiculo> => {
-    const response = await api.get<TipoVeiculo>(`/tipo-veiculo/edicao/${id}`);
-    return response.data;
-  },
+export const tipoVeiculoService = {
+  listar: (params: FilterPageable): Promise<ResponsePagedCommom<TipoVeiculo>> =>
+    getDeduplicado<ResponsePagedCommom<TipoVeiculo>>('/tipo-veiculo', params),
+
+  listarOpcoes: (): Promise<TipoVeiculo[]> =>
+    getDeduplicado<TipoVeiculo[]>('/tipo-veiculo/opcoes', {}),
+
+  buscarPorId: (id: number): Promise<TipoVeiculo> =>
+    getDeduplicado<TipoVeiculo>(`/tipo-veiculo/edicao/${id}`, {}),
 
   salvar: async (data: TipoVeiculo): Promise<number> => {
     const response = await api.post<number>('/tipo-veiculo/save', data);
@@ -32,14 +37,19 @@ export const tipoVeiculoService = {
 };
 
 export const veiculoService = {
-  listar: async (params: FilterPageable): Promise<ResponsePagedCommom<Veiculo>> => {
-    const response = await api.get<ResponsePagedCommom<Veiculo>>('/veiculo', { params });
-    return response.data;
-  },
+  listar: (params: FilterPageable): Promise<ResponsePagedCommom<Veiculo>> =>
+    getDeduplicado<ResponsePagedCommom<Veiculo>>('/veiculo', params),
 
-  buscarPorId: async (id: number): Promise<Veiculo> => {
-    const response = await api.get<Veiculo>(`/veiculo/edicao/${id}`);
-    return response.data;
+  buscarPorId: (id: number): Promise<Veiculo> =>
+    getDeduplicado<Veiculo>(`/veiculo/edicao/${id}`, {}),
+
+  // O backend responde 204 quando a placa ainda não está cadastrada
+  buscarPorPlaca: async (placa: string): Promise<Veiculo | null> => {
+    const veiculo = await getDeduplicado<Veiculo | ''>(
+      `/veiculo/placa/${encodeURIComponent(placa)}`,
+      {}
+    );
+    return veiculo || null;
   },
 
   salvar: async (data: Veiculo): Promise<number> => {
@@ -53,10 +63,8 @@ export const veiculoService = {
 };
 
 export const ticketService = {
-  listar: async (params: FilterPageable): Promise<ResponsePagedCommom<Ticket>> => {
-    const response = await api.get<ResponsePagedCommom<Ticket>>('/tickets', { params });
-    return response.data;
-  },
+  listar: (params: FilterPageable): Promise<ResponsePagedCommom<Ticket>> =>
+    getDeduplicado<ResponsePagedCommom<Ticket>>('/tickets', params),
 
   registrarEntrada: async (data: TicketEntradaRequest): Promise<number> => {
     const response = await api.post<number>('/tickets/save', data);

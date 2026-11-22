@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { usePaginatedList } from '../hooks/usePaginatedList';
 import { getApiErrorMessage } from '../services/api';
 import {
+  dashboardService,
   ticketService,
   tipoVeiculoService,
   veiculoService,
@@ -9,7 +11,7 @@ import {
 import type {
   DadosTicketSaida,
   FilterPageable,
-  ResponsePagedCommom,
+  IndicadoresDashboard,
   SortDirection,
   Ticket,
   TipoVeiculo,
@@ -83,31 +85,6 @@ function parseTab(value: string | null): ActiveTab {
   return 'tickets';
 }
 
-async function buscarDadosPainel(
-  ticketsFilter: FilterPageable,
-  veiculosFilter: FilterPageable,
-  tiposFilter: FilterPageable
-) {
-  const [ticketsRes, veiculosRes, tiposRes, tiposRef, veiculosRef, ticketsRef] =
-    await Promise.all([
-      ticketService.listar(ticketsFilter),
-      veiculoService.listar(veiculosFilter),
-      tipoVeiculoService.listar(tiposFilter),
-      tipoVeiculoService.listar({ page: 0, size: 100, direction: 'ASC', orderBy: 'descricao' }),
-      veiculoService.listar({ page: 0, size: 500, direction: 'ASC', orderBy: 'placa' }),
-      ticketService.listar({ page: 0, size: 500, direction: 'DESC', orderBy: 'id' }),
-    ]);
-
-  return {
-    ticketsRes,
-    veiculosRes,
-    tiposRes,
-    tiposRef,
-    veiculosRef,
-    ticketsRef,
-  };
-}
-
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -118,53 +95,54 @@ export default function Dashboard() {
     const state = location.state as { toast?: string } | null;
     return state?.toast ? { type: 'success', message: state.toast } : null;
   });
-  const [connectionError, setConnectionError] = useState('');
+  const [indicadoresError, setIndicadoresError] = useState('');
+  const [tiposError, setTiposError] = useState('');
+  const [refreshToken, setRefreshToken] = useState(0);
 
-  const [ticketsPage, setTicketsPage] = useState<ResponsePagedCommom<Ticket>>({
-    data: [],
-    totalRecords: 0,
-    totalPages: 0,
-    pageSize: DEFAULT_PAGE_SIZE,
+  const ticketsList = usePaginatedList<Ticket>({
+    fetcher: ticketService.listar,
+    initialFilter: { page: 0, size: DEFAULT_PAGE_SIZE, direction: 'DESC', orderBy: 'id' },
+    enabled: activeTab === 'tickets',
+    refreshToken,
+    errorMessage: 'Erro ao carregar os tickets.',
   });
-  const [ticketsFilter, setTicketsFilter] = useState<FilterPageable>({
-    page: 0,
-    size: DEFAULT_PAGE_SIZE,
-    direction: 'DESC',
-    orderBy: 'id',
-  });
+  const { page: ticketsPage, filter: ticketsFilter, setFilter: setTicketsFilter } = ticketsList;
   const [ticketStatusFilter, setTicketStatusFilter] = useState<'TODOS' | 'ABERTO' | 'FECHADO'>('TODOS');
   const [ticketSearch, setTicketSearch] = useState('');
 
-  const [veiculosPage, setVeiculosPage] = useState<ResponsePagedCommom<Veiculo>>({
-    data: [],
-    totalRecords: 0,
-    totalPages: 0,
-    pageSize: DEFAULT_PAGE_SIZE,
+  const veiculosList = usePaginatedList<Veiculo>({
+    fetcher: veiculoService.listar,
+    initialFilter: { page: 0, size: DEFAULT_PAGE_SIZE, direction: 'ASC', orderBy: 'placa' },
+    enabled: activeTab === 'veiculos',
+    refreshToken,
+    errorMessage: 'Erro ao carregar os veículos.',
   });
-  const [veiculosFilter, setVeiculosFilter] = useState<FilterPageable>({
-    page: 0,
-    size: DEFAULT_PAGE_SIZE,
-    direction: 'ASC',
-    orderBy: 'placa',
-  });
+  const { page: veiculosPage, filter: veiculosFilter, setFilter: setVeiculosFilter } = veiculosList;
 
-  const [tiposPage, setTiposPage] = useState<ResponsePagedCommom<TipoVeiculo>>({
-    data: [],
-    totalRecords: 0,
-    totalPages: 0,
-    pageSize: DEFAULT_PAGE_SIZE,
+  const tiposList = usePaginatedList<TipoVeiculo>({
+    fetcher: tipoVeiculoService.listar,
+    initialFilter: { page: 0, size: DEFAULT_PAGE_SIZE, direction: 'ASC', orderBy: 'descricao' },
+    enabled: activeTab === 'tipos',
+    refreshToken,
+    errorMessage: 'Erro ao carregar os tipos de veículo.',
   });
-  const [tiposFilter, setTiposFilter] = useState<FilterPageable>({
-    page: 0,
-    size: DEFAULT_PAGE_SIZE,
-    direction: 'ASC',
-    orderBy: 'descricao',
-  });
+  const { page: tiposPage, filter: tiposFilter, setFilter: setTiposFilter } = tiposList;
 
-  const [allTipos, setAllTipos] = useState<TipoVeiculo[]>([]);
-  const [allVeiculos, setAllVeiculos] = useState<Veiculo[]>([]);
-  const [allTicketsSummary, setAllTicketsSummary] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const activeList =
+    activeTab === 'tickets' ? ticketsList : activeTab === 'veiculos' ? veiculosList : tiposList;
+  const loading = activeList.loading;
+  const connectionError = activeList.error || indicadoresError || tiposError;
+
+  const [indicadores, setIndicadores] = useState<IndicadoresDashboard>({
+    ticketsAbertos: 0,
+    ticketsFechados: 0,
+    faturamento: 0,
+    totalVeiculos: 0,
+    totalTipos: 0,
+    placasNoPatio: [],
+  });
+  const [opcoesTipos, setOpcoesTipos] = useState<TipoVeiculo[]>([]);
+  const [tiposCarregadosEm, setTiposCarregadosEm] = useState<number | null>(null);
 
   const [entradaModalOpen, setEntradaModalOpen] = useState(false);
   const [entradaPlacaInicial, setEntradaPlacaInicial] = useState('');
@@ -196,98 +174,78 @@ export default function Dashboard() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const aplicarDadosPainel = useCallback(
-    (dados: Awaited<ReturnType<typeof buscarDadosPainel>>) => {
-      setTicketsPage(dados.ticketsRes);
-      setVeiculosPage(dados.veiculosRes);
-      setTiposPage(dados.tiposRes);
-      setAllTipos(dados.tiposRef.data);
-      setAllVeiculos(dados.veiculosRef.data);
-      setAllTicketsSummary(dados.ticketsRef.data);
-      setConnectionError('');
-    },
-    []
-  );
-
-  const carregarTudo = useCallback(async () => {
-    setLoading(true);
-    try {
-      const dados = await buscarDadosPainel(ticketsFilter, veiculosFilter, tiposFilter);
-      aplicarDadosPainel(dados);
-    } catch (err) {
-      setConnectionError(
-        getApiErrorMessage(err, 'Erro ao carregar os dados do estacionamento.')
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [ticketsFilter, veiculosFilter, tiposFilter, aplicarDadosPainel]);
+  const carregarTudo = useCallback(() => {
+    setRefreshToken((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
-    buscarDadosPainel(ticketsFilter, veiculosFilter, tiposFilter)
+    dashboardService
+      .buscarIndicadores()
       .then((dados) => {
-        if (!cancelled) {
-          aplicarDadosPainel(dados);
-        }
+        if (cancelled) return;
+        setIndicadores(dados);
+        setIndicadoresError('');
       })
       .catch((err) => {
         if (!cancelled) {
-          setConnectionError(
-            getApiErrorMessage(err, 'Erro ao carregar os dados do estacionamento.')
-          );
+          setIndicadoresError(getApiErrorMessage(err, 'Erro ao carregar os indicadores.'));
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [ticketsFilter, veiculosFilter, tiposFilter, aplicarDadosPainel]);
+  }, [refreshToken]);
+
+  // As opções de tipo só são buscadas quando a aba de veículos ou o modal de entrada precisam delas
+  const precisaTipos = activeTab === 'veiculos' || entradaModalOpen;
+
+  useEffect(() => {
+    if (!precisaTipos || tiposCarregadosEm === refreshToken) return;
+
+    let cancelled = false;
+
+    tipoVeiculoService
+      .listarOpcoes()
+      .then((tipos) => {
+        if (cancelled) return;
+        setOpcoesTipos(tipos);
+        setTiposError('');
+        setTiposCarregadosEm(refreshToken);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setTiposError(getApiErrorMessage(err, 'Erro ao carregar os tipos de veículo.'));
+        setTiposCarregadosEm(refreshToken);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [precisaTipos, refreshToken, tiposCarregadosEm]);
 
   const tiposById = useMemo(() => {
     const map = new Map<number, TipoVeiculo>();
-    for (const tipo of allTipos) {
+    for (const tipo of opcoesTipos) {
       if (tipo.id) map.set(tipo.id, tipo);
     }
     return map;
-  }, [allTipos]);
+  }, [opcoesTipos]);
 
-  const activePlates = useMemo(() => {
-    const set = new Set<string>();
-    for (const ticket of allTicketsSummary) {
-      if (ticket.status === 'ABERTO') {
-        set.add(ticket.placa.toUpperCase());
-      }
-    }
-    return set;
-  }, [allTicketsSummary]);
+  const activePlates = useMemo(
+    () => new Set(indicadores.placasNoPatio.map((placa) => placa.toUpperCase())),
+    [indicadores.placasNoPatio]
+  );
 
-  const kpis = useMemo(() => {
-    let abertos = 0;
-    let fechados = 0;
-    let faturamento = 0;
-
-    for (const ticket of allTicketsSummary) {
-      if (ticket.status === 'ABERTO') {
-        abertos += 1;
-      } else {
-        fechados += 1;
-        faturamento += Number(ticket.valorTotal ?? 0);
-      }
-    }
-
-    return {
-      abertos,
-      fechados,
-      faturamento,
-      totalVeiculos: veiculosPage.totalRecords,
-      totalTipos: tiposPage.totalRecords,
-    };
-  }, [allTicketsSummary, veiculosPage.totalRecords, tiposPage.totalRecords]);
+  const kpis = {
+    abertos: indicadores.ticketsAbertos,
+    fechados: indicadores.ticketsFechados,
+    faturamento: indicadores.faturamento,
+    totalVeiculos: indicadores.totalVeiculos,
+    totalTipos: indicadores.totalTipos,
+  };
 
   const ticketsVisiveis = useMemo(() => {
     const termo = ticketSearch.trim().toUpperCase();
@@ -333,7 +291,7 @@ export default function Dashboard() {
         showToast('success', 'Tipo de veículo excluído com sucesso.');
       }
       setDeleteTarget(null);
-      await carregarTudo();
+      carregarTudo();
     } catch (err) {
       showToast(
         'error',
@@ -815,16 +773,16 @@ export default function Dashboard() {
 
       {entradaModalOpen && (
         <EntradaModal
-          tipos={allTipos}
-          veiculos={allVeiculos}
+          tipos={opcoesTipos}
+          tiposCarregados={tiposCarregadosEm !== null}
           placaInicial={entradaPlacaInicial}
           tipoInicial={entradaTipoInicial}
           onClose={() => setEntradaModalOpen(false)}
-          onSuccess={async () => {
+          onSuccess={() => {
             setEntradaModalOpen(false);
             showToast('success', 'Entrada registrada e ticket aberto com sucesso.');
             setTab('tickets');
-            await carregarTudo();
+            carregarTudo();
           }}
         />
       )}
@@ -833,10 +791,10 @@ export default function Dashboard() {
         <SaidaModal
           dados={checkoutData}
           onClose={() => setCheckoutData(null)}
-          onSuccess={async () => {
+          onSuccess={() => {
             setCheckoutData(null);
             showToast('success', 'Saída registrada e ticket finalizado com sucesso.');
-            await carregarTudo();
+            carregarTudo();
           }}
         />
       )}
@@ -966,47 +924,67 @@ function PaginationBar({
 
 function EntradaModal({
   tipos,
-  veiculos,
+  tiposCarregados,
   placaInicial,
   tipoInicial,
   onClose,
   onSuccess,
 }: {
   tipos: TipoVeiculo[];
-  veiculos: Veiculo[];
+  tiposCarregados: boolean;
   placaInicial: string;
   tipoInicial?: number;
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const [placa, setPlaca] = useState(placaInicial);
-  const [tipoVeiculoId, setTipoVeiculoId] = useState(() => {
-    if (tipoInicial) return String(tipoInicial);
-    return tipos[0]?.id ? String(tipos[0].id) : '';
-  });
+  const [tipoEscolhido, setTipoEscolhido] = useState<string | null>(
+    tipoInicial ? String(tipoInicial) : null
+  );
+  const [consultaPlaca, setConsultaPlaca] = useState<{
+    placa: string;
+    veiculo: Veiculo | null;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const veiculoReconhecido = useMemo(() => {
-    const limpa = placa.trim().toUpperCase();
-    if (!limpa) return null;
-    return veiculos.find((v) => v.placa.toUpperCase() === limpa) ?? null;
-  }, [placa, veiculos]);
+  const tipoVeiculoId = tipoEscolhido ?? (tipos[0]?.id ? String(tipos[0].id) : '');
+  const placaLimpa = placa.trim().toUpperCase();
+  const consultaAtual = consultaPlaca?.placa === placaLimpa ? consultaPlaca : null;
+  const veiculoReconhecido = consultaAtual?.veiculo ?? null;
+
+  // Aguarda o usuário parar de digitar antes de consultar a placa
+  useEffect(() => {
+    if (placaLimpa.length < 3) return;
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      veiculoService
+        .buscarPorPlaca(placaLimpa)
+        .then((veiculo) => {
+          if (cancelled) return;
+          setConsultaPlaca({ placa: placaLimpa, veiculo });
+          if (veiculo) setTipoEscolhido(String(veiculo.idTipoVeiculo));
+        })
+        .catch(() => {
+          if (!cancelled) setConsultaPlaca(null);
+        });
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [placaLimpa]);
 
   const handlePlacaChange = (valor: string) => {
-    const upper = valor.toUpperCase();
-    setPlaca(upper);
-    const match = veiculos.find((v) => v.placa.toUpperCase() === upper.trim());
-    if (match) {
-      setTipoVeiculoId(String(match.idTipoVeiculo));
-    }
+    setPlaca(valor.toUpperCase());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const placaLimpa = placa.trim().toUpperCase();
     if (!placaLimpa) {
       setError('Informe a placa do veículo.');
       return;
@@ -1045,7 +1023,7 @@ function EntradaModal({
 
         {error && <div className="alert alert-error">{error}</div>}
 
-        {tipos.length === 0 && (
+        {tiposCarregados && tipos.length === 0 && (
           <div className="alert alert-warning">
             Cadastre ao menos um{' '}
             <Link to="/cadastro-tipo-veiculo" className="inline-link">
@@ -1076,7 +1054,7 @@ function EntradaModal({
                 Veículo cadastrado: {veiculoReconhecido.modelo || 'Modelo não informado'}
                 {veiculoReconhecido.cor ? ` · ${veiculoReconhecido.cor}` : ''}
               </span>
-            ) : placa.trim().length >= 3 ? (
+            ) : consultaAtual ? (
               <span className="form-hint">
                 Placa nova: o veículo será cadastrado automaticamente junto ao ticket.
               </span>
@@ -1090,7 +1068,7 @@ function EntradaModal({
             <select
               id="entrada-tipo"
               value={tipoVeiculoId}
-              onChange={(e) => setTipoVeiculoId(e.target.value)}
+              onChange={(e) => setTipoEscolhido(e.target.value)}
               required
               disabled={tipos.length === 0}
             >

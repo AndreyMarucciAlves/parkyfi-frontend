@@ -40,6 +40,15 @@ export interface Ticket {
   status: StatusTicket;
 }
 
+export interface IndicadoresDashboard {
+  ticketsAbertos: number;
+  ticketsFechados: number;
+  faturamento: number;
+  totalVeiculos: number;
+  totalTipos: number;
+  placasNoPatio: string[];
+}
+
 export interface TicketEntradaRequest {
   placa: string;
   tipoVeiculoId: number;
