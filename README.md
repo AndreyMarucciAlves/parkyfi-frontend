@@ -33,23 +33,23 @@ A arquitetura escolhida pelo grupo foi **Cliente-Servidor**:
 
 ### O que é
 
-O frontend é a interface do sistema **Parkfy**, usada pelos operadores do estacionamento para:
+O frontend é a interface operacional do sistema **Parkyfi**, com acesso direto ao painel (sem tela de login), usada pelos operadores do estacionamento para:
 
-- visualizar os clientes cadastrados;
-- cadastrar e editar clientes;
-- visualizar os veículos, quantos estão no estacionamento e quantos já saíram;
-- cadastrar e editar veículos, vinculando-os a um cliente.
+- registrar a entrada de veículos (gerando tickets) e acompanhar veículos no pátio em tempo real;
+- consultar a prévia de saída com cálculo automático de permanência e valor total, e confirmar a cobrança/saída;
+- cadastrar, listar, editar e excluir veículos;
+- cadastrar, listar, editar e excluir tipos de veículo e suas respectivas tarifas por hora;
+- paginar e ordenar listagens diretamente pela API.
 
 ### Telas e rotas
 
 | Rota | Tela | Descrição |
 |---|---|---|
-| `/login` | Login | Tela de acesso apenas visual (demonstração). Não há autenticação no sistema. |
-| `/` | Painel | Lista de clientes e de veículos, com contadores e atalhos para cadastro e edição. |
-| `/cadastro-cliente` | Novo cliente | Formulário de cadastro de cliente. |
-| `/cadastro-cliente/:id` | Editar cliente | Formulário de edição de um cliente existente. |
-| `/cadastro-veiculo` | Novo veículo | Formulário de cadastro de veículo. |
+| `/` | Painel | Visão operacional com indicadores, controle de tickets (entrada e saída), veículos e tipos/tarifas. |
+| `/cadastro-veiculo` | Novo veículo | Formulário de cadastro de veículo vinculado a um tipo de veículo. |
 | `/cadastro-veiculo/:id` | Editar veículo | Formulário de edição de um veículo existente. |
+| `/cadastro-tipo-veiculo` | Novo tipo de veículo | Formulário de cadastro de categoria e tarifa por hora. |
+| `/cadastro-tipo-veiculo/:id` | Editar tipo de veículo | Formulário de edição de um tipo de veículo existente. |
 
 ### Tecnologias
 
@@ -76,12 +76,12 @@ parkyfi-frontend/
 └── src/
     ├── main.tsx                # Renderiza a aplicação no DOM (StrictMode)
     ├── App.tsx                 # Definição das rotas (React Router)
-    ├── pages/                  # Telas: Login, Dashboard, cadastros de cliente e veículo
+    ├── pages/                  # Telas: Dashboard, CadastroVeiculo e CadastroTipoVeiculo
     ├── services/
-    │   ├── api.ts              # Instância do Axios com a URL base da API
-    │   └── estacionamento.ts   # Chamadas aos endpoints de clientes e veículos
+    │   ├── api.ts              # Instância do Axios e tratamento de erros da API
+    │   └── estacionamento.ts   # Chamadas aos endpoints de tickets, veículos e tipos de veículo
     ├── types/
-    │   └── estacionamento.ts   # Interfaces Cliente e Veiculo (e seus DTOs de requisição)
+    │   └── estacionamento.ts   # Interfaces e DTOs compatíveis com o backend
     └── assets/                 # Imagens e ícones
 ```
 
@@ -91,19 +91,18 @@ A URL base da API é lida da variável de ambiente `VITE_API_URL` (com fallback 
 
 | Método | Endpoint | Uso |
 |---|---|---|
-| GET | `/clientes` | Listar clientes |
-| GET | `/clientes/{id}` | Buscar cliente por ID |
-| POST | `/clientes` | Criar cliente |
-| PUT | `/clientes/{id}` | Atualizar cliente |
-| DELETE | `/clientes/{id}` | Excluir cliente |
-| GET | `/veiculos` | Listar veículos |
-| GET | `/veiculos/cliente/{clienteId}` | Listar veículos de um cliente |
-| GET | `/veiculos/no-estacionamento` | Listar veículos no estacionamento |
-| GET | `/veiculos/{id}` | Buscar veículo por ID |
-| POST | `/veiculos` | Criar veículo |
-| PUT | `/veiculos/{id}` | Atualizar veículo |
-| PUT | `/veiculos/{id}/saida` | Registrar saída do veículo |
-| DELETE | `/veiculos/{id}` | Excluir veículo |
+| GET | `/tickets` | Listar tickets paginados e ordenados |
+| POST | `/tickets/save` | Registrar entrada de veículo (cria ticket e veículo se necessário) |
+| GET | `/tickets/get-dados-saida/{ticketId}` | Consultar prévia de tempo e valor total para saída |
+| POST | `/tickets/registrar-saida` | Registrar saída e finalizar ticket |
+| GET | `/veiculo` | Listar veículos paginados e ordenados |
+| GET | `/veiculo/edicao/{idVeiculo}` | Buscar veículo por ID |
+| POST | `/veiculo/save` | Cadastrar ou atualizar veículo |
+| DELETE | `/veiculo/{idVeiculo}` | Excluir veículo |
+| GET | `/tipo-veiculo` | Listar tipos de veículo paginados e ordenados |
+| GET | `/tipo-veiculo/edicao/{idTipoVeiculo}` | Buscar tipo de veículo por ID |
+| POST | `/tipo-veiculo/save` | Cadastrar ou atualizar tipo de veículo |
+| DELETE | `/tipo-veiculo/{idTipoVeiculo}` | Excluir tipo de veículo |
 
 ## Como executar
 
@@ -130,9 +129,7 @@ cp .env.example .env
 
 | Variável | Descrição |
 |---|---|
-| `VITE_API_URL` | URL base da API do backend. Para o backend rodando localmente, use `http://localhost:8081/v1/api`. |
-
-> **Atenção:** o `.env.example` traz `http://localhost:8080/v1/api`, mas o backend sobe por padrão em `http://localhost:8081/v1/api`. Ajuste o valor no `.env` para a porta em que o backend está rodando.
+| `VITE_API_URL` | URL base da API do backend (`http://localhost:8081/v1/api` por padrão). |
 
 O arquivo `.env` não é versionado (está no `.gitignore`).
 
@@ -151,12 +148,6 @@ A aplicação fica disponível em `http://localhost:5173`.
 | `npm run build` | Gera a versão de produção na pasta `dist/` |
 | `npm run preview` | Sobe um servidor local para visualizar o build de produção |
 | `npm run lint` | Executa o Oxlint sobre o código |
-
-## Limitações conhecidas
-
-- A tela de login é apenas demonstrativa: qualquer e-mail válido leva ao painel.
-- No painel, as ações de **excluir** cliente/veículo e **registrar saída** ainda não estão ligadas à API (aparecem como pendentes no código).
-- Se o navegador acusar erro de CORS ao chamar a API, verifique a configuração de CORS do backend para a origem `http://localhost:5173`.
 
 ## Links
 
