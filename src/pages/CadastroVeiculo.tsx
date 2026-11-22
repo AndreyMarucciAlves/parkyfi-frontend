@@ -1,104 +1,98 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import { veiculoService, clienteService } from '../services/estacionamento';
-import type { Veiculo, VeiculoRequest, Cliente } from '../types/estacionamento';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { getApiErrorMessage } from '../services/api';
+import { tipoVeiculoService, veiculoService } from '../services/estacionamento';
+import type { TipoVeiculo } from '../types/estacionamento';
 import './CadastroVeiculo.css';
 
 export default function CadastroVeiculo() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [veiculo, setVeiculo] = useState<VeiculoRequest>({
-    placa: '',
-    modelo: '',
-    cor: '',
-    clienteId: 0,
-  });
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [loading, setLoading] = useState(false);
+  const isEdit = Boolean(id);
+
+  const [placa, setPlaca] = useState('');
+  const [modelo, setModelo] = useState('');
+  const [cor, setCor] = useState('');
+  const [idTipoVeiculo, setIdTipoVeiculo] = useState('');
+  const [tiposVeiculo, setTiposVeiculo] = useState<TipoVeiculo[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const isEdit = !!id;
 
   useEffect(() => {
-    carregarClientes();
-    if (isEdit && id) {
-      carregarVeiculo(Number(id));
-    }
+    const carregarFormulario = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const tiposResponse = await tipoVeiculoService.listar({
+          page: 0,
+          size: 100,
+          direction: 'ASC',
+          orderBy: 'descricao',
+        });
+        setTiposVeiculo(tiposResponse.data);
+
+        if (isEdit && id) {
+          const veiculo = await veiculoService.buscarPorId(Number(id));
+          setPlaca(veiculo.placa);
+          setModelo(veiculo.modelo ?? '');
+          setCor(veiculo.cor ?? '');
+          setIdTipoVeiculo(String(veiculo.idTipoVeiculo));
+        } else if (tiposResponse.data.length > 0 && tiposResponse.data[0]?.id) {
+          setIdTipoVeiculo(String(tiposResponse.data[0].id));
+        }
+      } catch (err) {
+        setError(getApiErrorMessage(err, 'Erro ao carregar dados do veículo.'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarFormulario();
   }, [isEdit, id]);
-
-  const carregarClientes = async () => {
-    try {
-      const c = await clienteService.listar();
-      setClientes(c);
-    } catch (err) {
-      setError('Erro ao carregar lista de clientes.');
-    }
-  };
-
-  const carregarVeiculo = async (id: number) => {
-    setLoading(true);
-    try {
-      const v = await veiculoService.buscarPorId(Number(id));
-      setVeiculo({
-        placa: v.placa,
-        modelo: v.modelo,
-        cor: v.cor,
-        clienteId: v.clienteId,
-      });
-    } catch (err) {
-      setError('Erro ao carregar veículo.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setVeiculo({ ...veiculo, [name]: name === 'clienteId' ? Number(value) : value });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
-    setSaving(true);
 
+    const placaNormalizada = placa.trim().toUpperCase();
+    if (!placaNormalizada) {
+      setError('A placa do veículo é obrigatória.');
+      return;
+    }
+
+    if (!idTipoVeiculo) {
+      setError('Selecione um tipo de veículo.');
+      return;
+    }
+
+    setSaving(true);
     try {
-      if (isEdit && id) {
-        await veiculoService.atualizar(Number(id), veiculo);
-        setSuccess('Veículo atualizado com sucesso!');
-      } else {
-        await veiculoService.criar(veiculo);
-        setSuccess('Veículo cadastrado com sucesso!');
-      }
-      setTimeout(() => navigate('/'), 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao salvar veículo.');
+      await veiculoService.salvar({
+        id: isEdit && id ? Number(id) : undefined,
+        placa: placaNormalizada,
+        modelo: modelo.trim() || null,
+        cor: cor.trim() || null,
+        idTipoVeiculo: Number(idTipoVeiculo),
+      });
+      navigate('/?tab=veiculos', {
+        state: {
+          toast: isEdit
+            ? 'Veículo atualizado com sucesso.'
+            : 'Veículo cadastrado com sucesso.',
+        },
+      });
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Erro ao salvar veículo.'));
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleSaida = async () => {
-    if (!id) return;
-    if (!window.confirm('Confirmar saída do veículo?')) return;
-    try {
-      await veiculoService.registrarSaida(Number(id));
-      setSuccess('Saída registrada com sucesso!');
-      setTimeout(() => navigate('/'), 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao registrar saída.');
     }
   };
 
   if (loading) {
     return (
       <div className="cadastro-container">
-        <div className="cadastro-card">Carregando veículo...</div>
+        <div className="cadastro-card">Carregando informações do veículo...</div>
       </div>
     );
   }
@@ -107,84 +101,103 @@ export default function CadastroVeiculo() {
     <div className="cadastro-container">
       <div className="cadastro-card">
         <div className="cadastro-header">
-          <Link to="/" className="btn-voltar">← Voltar</Link>
-          <h1>{isEdit ? 'Editar Veículo' : 'Cadastrar Veículo'}</h1>
+          <Link to="/?tab=veiculos" className="btn-voltar">
+            ← Voltar
+          </Link>
+          <div className="cadastro-header-text">
+            <h1>{isEdit ? 'Editar Veículo' : 'Cadastrar Veículo'}</h1>
+            <p>Vincule a placa do veículo a uma categoria tarifária</p>
+          </div>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+        {error && <div className="alert alert-error">{error}</div>}
+
+        {tiposVeiculo.length === 0 && (
+          <div className="alert alert-warning">
+            Nenhum tipo de veículo cadastrado.{' '}
+            <Link to="/cadastro-tipo-veiculo" className="inline-link">
+              Cadastre uma categoria primeiro
+            </Link>
+            .
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="cadastro-form">
           <div className="form-group">
-            <label htmlFor="placa">Placa <span>*</span></label>
+            <label htmlFor="placa">
+              Placa <span className="required">*</span>
+            </label>
             <input
-              type="text"
-              name="placa"
               id="placa"
-              placeholder="ABC-1234"
-              value={veiculo.placa}
-              onChange={handleChange}
-              required
-              maxLength={7}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="modelo">Modelo <span>*</span></label>
-            <input
               type="text"
-              name="modelo"
-              id="modelo"
-              placeholder="Fusca"
-              value={veiculo.modelo}
-              onChange={handleChange}
+              className="input-placa"
+              placeholder="ABC1D23 ou ABC-1234"
+              value={placa}
+              onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+              maxLength={10}
               required
+              autoFocus
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="cor">Cor <span>*</span></label>
-            <input
-              type="text"
-              name="cor"
-              id="cor"
-              placeholder="Preto"
-              value={veiculo.cor}
-              onChange={handleChange}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="modelo">Modelo</label>
+              <input
+                id="modelo"
+                type="text"
+                placeholder="Ex.: Civic, Onix, CG 160"
+                value={modelo}
+                onChange={(e) => setModelo(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="cor">Cor</label>
+              <input
+                id="cor"
+                type="text"
+                placeholder="Ex.: Prata, Preto"
+                value={cor}
+                onChange={(e) => setCor(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="clienteId">Cliente <span>*</span></label>
-            <select name="clienteId" id="clienteId" value={veiculo.clienteId} onChange={handleChange} required>
-              <option value="">Selecione um cliente</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome} ({c.cpf})
+            <label htmlFor="idTipoVeiculo">
+              Tipo de Veículo <span className="required">*</span>
+            </label>
+            <select
+              id="idTipoVeiculo"
+              value={idTipoVeiculo}
+              onChange={(e) => setIdTipoVeiculo(e.target.value)}
+              required
+              disabled={tiposVeiculo.length === 0}
+            >
+              <option value="">Selecione uma categoria</option>
+              {tiposVeiculo.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.descricao} — R$ {Number(tipo.valorHora).toFixed(2).replace('.', ',')}/h
                 </option>
               ))}
             </select>
           </div>
 
-          {isEdit && id && (
-            <div className="form-group saida-group">
-              <button
-                type="button"
-                className="btn-saida"
-                onClick={handleSaida}
-              >
-                Registrar Saída do Veículo
-              </button>
-            </div>
-          )}
-
           <div className="form-actions">
-            <button type="button" className="btn-cancelar" onClick={() => navigate('/')}>
+            <button
+              type="button"
+              className="btn-cancelar"
+              onClick={() => navigate('/?tab=veiculos')}
+            >
               Cancelar
             </button>
-            <button type="submit" className="btn-salvar" disabled={saving}>
-              {saving ? 'Salvando...' : isEdit ? 'Atualizar' : 'Salvar'}
+            <button
+              type="submit"
+              className="btn-salvar"
+              disabled={saving || tiposVeiculo.length === 0}
+            >
+              {saving ? 'Salvando...' : isEdit ? 'Atualizar Veículo' : 'Cadastrar Veículo'}
             </button>
           </div>
         </form>

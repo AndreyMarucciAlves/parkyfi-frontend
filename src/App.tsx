@@ -1,19 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
-import CadastroCliente from './pages/CadastroCliente';
+import CadastroTipoVeiculo from './pages/CadastroTipoVeiculo';
 import CadastroVeiculo from './pages/CadastroVeiculo';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
         <Route path="/" element={<Dashboard />} />
-        <Route path="/cadastro-cliente" element={<CadastroCliente />} />
-        <Route path="/cadastro-cliente/:id" element={<CadastroCliente />} />
         <Route path="/cadastro-veiculo" element={<CadastroVeiculo />} />
         <Route path="/cadastro-veiculo/:id" element={<CadastroVeiculo />} />
+        <Route path="/cadastro-tipo-veiculo" element={<CadastroTipoVeiculo />} />
+        <Route path="/cadastro-tipo-veiculo/:id" element={<CadastroTipoVeiculo />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
