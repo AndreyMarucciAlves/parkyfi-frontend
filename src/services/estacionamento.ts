@@ -1,69 +1,74 @@
 import { api } from './api';
-import type { Cliente, ClienteRequest, Veiculo, VeiculoRequest } from '../types/estacionamento';
+import type {
+  DadosTicketSaida,
+  FilterPageable,
+  ResponsePagedCommom,
+  Ticket,
+  TicketEntradaRequest,
+  TicketSaidaRequest,
+  TipoVeiculo,
+  Veiculo,
+} from '../types/estacionamento';
 
-export const clienteService = {
-  listar: async (): Promise<Cliente[]> => {
-    const response = await api.get<Cliente[]>('/clientes');
+export const tipoVeiculoService = {
+  listar: async (params: FilterPageable): Promise<ResponsePagedCommom<TipoVeiculo>> => {
+    const response = await api.get<ResponsePagedCommom<TipoVeiculo>>('/tipo-veiculo', { params });
     return response.data;
   },
 
-  buscarPorId: async (id: number): Promise<Cliente> => {
-    const response = await api.get<Cliente>(`/clientes/${id}`);
+  buscarPorId: async (id: number): Promise<TipoVeiculo> => {
+    const response = await api.get<TipoVeiculo>(`/tipo-veiculo/edicao/${id}`);
     return response.data;
   },
 
-  criar: async (data: ClienteRequest): Promise<Cliente> => {
-    const response = await api.post<Cliente>('/clientes', data);
-    return response.data;
-  },
-
-  atualizar: async (id: number, data: ClienteRequest): Promise<Cliente> => {
-    const response = await api.put<Cliente>(`/clientes/${id}`, data);
+  salvar: async (data: TipoVeiculo): Promise<number> => {
+    const response = await api.post<number>('/tipo-veiculo/save', data);
     return response.data;
   },
 
   deletar: async (id: number): Promise<void> => {
-    await api.delete(`/clientes/${id}`);
+    await api.delete(`/tipo-veiculo/${id}`);
   },
 };
 
 export const veiculoService = {
-  listar: async (): Promise<Veiculo[]> => {
-    const response = await api.get<Veiculo[]>('/veiculos');
-    return response.data;
-  },
-
-  listarPorCliente: async (clienteId: number): Promise<Veiculo[]> => {
-    const response = await api.get<Veiculo[]>(`/veiculos/cliente/${clienteId}`);
-    return response.data;
-  },
-
-  listarNoEstacionamento: async (): Promise<Veiculo[]> => {
-    const response = await api.get<Veiculo[]>('/veiculos/no-estacionamento');
+  listar: async (params: FilterPageable): Promise<ResponsePagedCommom<Veiculo>> => {
+    const response = await api.get<ResponsePagedCommom<Veiculo>>('/veiculo', { params });
     return response.data;
   },
 
   buscarPorId: async (id: number): Promise<Veiculo> => {
-    const response = await api.get<Veiculo>(`/veiculos/${id}`);
+    const response = await api.get<Veiculo>(`/veiculo/edicao/${id}`);
     return response.data;
   },
 
-  criar: async (data: VeiculoRequest): Promise<Veiculo> => {
-    const response = await api.post<Veiculo>('/veiculos', data);
-    return response.data;
-  },
-
-  atualizar: async (id: number, data: VeiculoRequest): Promise<Veiculo> => {
-    const response = await api.put<Veiculo>(`/veiculos/${id}`, data);
-    return response.data;
-  },
-
-  registrarSaida: async (id: number): Promise<Veiculo> => {
-    const response = await api.put<Veiculo>(`/veiculos/${id}/saida`, {});
+  salvar: async (data: Veiculo): Promise<number> => {
+    const response = await api.post<number>('/veiculo/save', data);
     return response.data;
   },
 
   deletar: async (id: number): Promise<void> => {
-    await api.delete(`/veiculos/${id}`);
+    await api.delete(`/veiculo/${id}`);
+  },
+};
+
+export const ticketService = {
+  listar: async (params: FilterPageable): Promise<ResponsePagedCommom<Ticket>> => {
+    const response = await api.get<ResponsePagedCommom<Ticket>>('/tickets', { params });
+    return response.data;
+  },
+
+  registrarEntrada: async (data: TicketEntradaRequest): Promise<number> => {
+    const response = await api.post<number>('/tickets/save', data);
+    return response.data;
+  },
+
+  buscarDadosSaida: async (ticketId: number): Promise<DadosTicketSaida> => {
+    const response = await api.get<DadosTicketSaida>(`/tickets/get-dados-saida/${ticketId}`);
+    return response.data;
+  },
+
+  registrarSaida: async (data: TicketSaidaRequest): Promise<void> => {
+    await api.post('/tickets/registrar-saida', data);
   },
 };

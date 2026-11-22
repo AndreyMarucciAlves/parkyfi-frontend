@@ -8,3 +8,16 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const apiMessage = error.response?.data?.message;
+    if (typeof apiMessage === 'string' && apiMessage.trim().length > 0) {
+      return apiMessage;
+    }
+    if (!error.response) {
+      return 'Não foi possível conectar ao servidor. Verifique se o backend está em execução.';
+    }
+  }
+  return fallback;
+}
