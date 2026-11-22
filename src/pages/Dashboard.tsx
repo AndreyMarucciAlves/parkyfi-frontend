@@ -33,6 +33,7 @@ interface DeleteTarget {
 }
 
 const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [1, 2, 5, 10, 20, 50, 100];
 
 function formatCurrency(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
@@ -83,6 +84,18 @@ function parseTab(value: string | null): ActiveTab {
     return value;
   }
   return 'tickets';
+}
+
+function getVisiblePages(page: number, totalPages: number): (number | 'gap')[] {
+  const pages = [...new Set([0, page - 1, page, page + 1, totalPages - 1])]
+    .filter((value) => value >= 0 && value < totalPages)
+    .sort((a, b) => a - b);
+
+  return pages.flatMap((value, index) => {
+    const previous = pages[index - 1];
+    if (previous === undefined || value === previous + 1) return [value];
+    return value === previous + 2 ? [previous + 1, value] : (['gap', value] as const);
+  });
 }
 
 export default function Dashboard() {
@@ -547,11 +560,14 @@ export default function Dashboard() {
 
             <PaginationBar
               page={ticketsFilter.page}
+              size={ticketsFilter.size}
               totalPages={ticketsPage.totalPages}
               totalRecords={ticketsPage.totalRecords}
+              disabled={loading}
               onPageChange={(nextPage) =>
                 setTicketsFilter((prev) => ({ ...prev, page: nextPage }))
               }
+              onSizeChange={(size) => setTicketsFilter((prev) => ({ ...prev, page: 0, size }))}
             />
           </section>
         )}
@@ -671,11 +687,14 @@ export default function Dashboard() {
 
             <PaginationBar
               page={veiculosFilter.page}
+              size={veiculosFilter.size}
               totalPages={veiculosPage.totalPages}
               totalRecords={veiculosPage.totalRecords}
+              disabled={loading}
               onPageChange={(nextPage) =>
                 setVeiculosFilter((prev) => ({ ...prev, page: nextPage }))
               }
+              onSizeChange={(size) => setVeiculosFilter((prev) => ({ ...prev, page: 0, size }))}
             />
           </section>
         )}
@@ -761,11 +780,14 @@ export default function Dashboard() {
 
             <PaginationBar
               page={tiposFilter.page}
+              size={tiposFilter.size}
               totalPages={tiposPage.totalPages}
               totalRecords={tiposPage.totalRecords}
+              disabled={loading}
               onPageChange={(nextPage) =>
                 setTiposFilter((prev) => ({ ...prev, page: nextPage }))
               }
+              onSizeChange={(size) => setTiposFilter((prev) => ({ ...prev, page: 0, size }))}
             />
           </section>
         )}
@@ -883,40 +905,97 @@ function SortControls({
 
 function PaginationBar({
   page,
+  size,
   totalPages,
   totalRecords,
+  disabled,
   onPageChange,
+  onSizeChange,
 }: {
   page: number;
+  size: number;
   totalPages: number;
   totalRecords: number;
+  disabled: boolean;
   onPageChange: (nextPage: number) => void;
+  onSizeChange: (nextSize: number) => void;
 }) {
   if (totalRecords === 0) return null;
   const totalPaginasExibicao = Math.max(totalPages, 1);
 
   return (
     <div className="pagination-bar">
-      <span className="pagination-info">
-        {totalRecords} registro(s) · Página {page + 1} de {totalPaginasExibicao}
-      </span>
+      <div className="pagination-summary">
+        <span className="pagination-info">
+          {totalRecords} registro(s) · Página {page + 1} de {totalPaginasExibicao}
+        </span>
+        <label className="pagination-field">
+          Por página
+          <select
+            value={size}
+            disabled={disabled}
+            onChange={(e) => onSizeChange(Number(e.target.value))}
+          >
+            {PAGE_SIZE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <div className="pagination-buttons">
         <button
           type="button"
           className="btn-page"
-          disabled={page <= 0}
+          disabled={disabled || page <= 0}
           onClick={() => onPageChange(page - 1)}
         >
           ← Anterior
         </button>
+        {getVisiblePages(page, totalPaginasExibicao).map((item, index) =>
+          item === 'gap' ? (
+            <span key={`gap-${index}`} className="pagination-gap" aria-hidden="true">
+              …
+            </span>
+          ) : (
+            <button
+              key={item}
+              type="button"
+              className={`btn-page btn-page-number ${item === page ? 'active' : ''}`}
+              aria-label={`Ir para a página ${item + 1}`}
+              aria-current={item === page ? 'page' : undefined}
+              disabled={disabled}
+              onClick={() => item !== page && onPageChange(item)}
+            >
+              {item + 1}
+            </button>
+          )
+        )}
         <button
           type="button"
           className="btn-page"
-          disabled={page + 1 >= totalPaginasExibicao}
+          disabled={disabled || page + 1 >= totalPaginasExibicao}
           onClick={() => onPageChange(page + 1)}
         >
           Próxima →
         </button>
+
+        <label className="pagination-field">
+          Ir para a página
+          <select
+            value={page}
+            disabled={disabled || totalPaginasExibicao <= 1}
+            onChange={(e) => onPageChange(Number(e.target.value))}
+          >
+            {Array.from({ length: totalPaginasExibicao }, (_, index) => (
+              <option key={index} value={index}>
+                {index + 1}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </div>
   );
