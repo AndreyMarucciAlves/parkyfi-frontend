@@ -50,7 +50,7 @@ export default function CadastroVeiculo() {
     e.preventDefault();
     setError('');
 
-    const placaNormalizada = placa.trim().toUpperCase();
+    const placaNormalizada = placa.trim();
     if (!placaNormalizada) {
       setError('A placa do veículo é obrigatória.');
       return;
@@ -128,7 +128,7 @@ export default function CadastroVeiculo() {
               className="input-placa"
               placeholder="ABC1D23 ou ABC-1234"
               value={placa}
-              onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+              onChange={(e) => setPlaca(e.target.value)}
               maxLength={10}
               required
               autoFocus

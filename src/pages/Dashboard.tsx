@@ -1028,7 +1028,7 @@ function EntradaModal({
   const [error, setError] = useState('');
 
   const tipoVeiculoId = tipoEscolhido ?? (tipos[0]?.id ? String(tipos[0].id) : '');
-  const placaLimpa = placa.trim().toUpperCase();
+  const placaLimpa = placa.trim();
   const consultaAtual = consultaPlaca?.placa === placaLimpa ? consultaPlaca : null;
   const veiculoReconhecido = consultaAtual?.veiculo ?? null;
 
@@ -1057,7 +1057,7 @@ function EntradaModal({
   }, [placaLimpa]);
 
   const handlePlacaChange = (valor: string) => {
-    setPlaca(valor.toUpperCase());
+    setPlaca(valor);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
