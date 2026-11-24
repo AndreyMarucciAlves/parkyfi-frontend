@@ -4,6 +4,7 @@ import type {
   FilterPageable,
   IndicadoresDashboard,
   ResponsePagedCommom,
+  StatusTicket,
   Ticket,
   TicketEntradaRequest,
   TicketSaidaRequest,
@@ -63,8 +64,9 @@ export const veiculoService = {
 };
 
 export const ticketService = {
-  listar: (params: FilterPageable): Promise<ResponsePagedCommom<Ticket>> =>
-    getDeduplicado<ResponsePagedCommom<Ticket>>('/tickets', params),
+  // Sem status, o backend retorna todos os tickets
+  listar: (params: FilterPageable, status?: StatusTicket): Promise<ResponsePagedCommom<Ticket>> =>
+    getDeduplicado<ResponsePagedCommom<Ticket>>('/tickets', status ? { ...params, status } : params),
 
   registrarEntrada: async (data: TicketEntradaRequest): Promise<number> => {
     const response = await api.post<number>('/tickets/save', data);

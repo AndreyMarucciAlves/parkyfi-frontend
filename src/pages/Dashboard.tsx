@@ -13,6 +13,7 @@ import type {
   FilterPageable,
   IndicadoresDashboard,
   SortDirection,
+  StatusTicket,
   Ticket,
   TipoVeiculo,
   Veiculo,
@@ -112,16 +113,25 @@ export default function Dashboard() {
   const [tiposError, setTiposError] = useState('');
   const [refreshToken, setRefreshToken] = useState(0);
 
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<'TODOS' | StatusTicket>('TODOS');
+  const [ticketSearch, setTicketSearch] = useState('');
+
+  // O status é filtrado no backend, para a paginação considerar todos os tickets daquele status
+  const listarTickets = useCallback(
+    (filter: FilterPageable) =>
+      ticketService.listar(filter, ticketStatusFilter === 'TODOS' ? undefined : ticketStatusFilter),
+    [ticketStatusFilter]
+  );
+
   const ticketsList = usePaginatedList<Ticket>({
-    fetcher: ticketService.listar,
+    fetcher: listarTickets,
     initialFilter: { page: 0, size: DEFAULT_PAGE_SIZE, direction: 'DESC', orderBy: 'id' },
     enabled: activeTab === 'tickets',
     refreshToken,
     errorMessage: 'Erro ao carregar os tickets.',
+    queryKey: ticketStatusFilter,
   });
   const { page: ticketsPage, filter: ticketsFilter, setFilter: setTicketsFilter } = ticketsList;
-  const [ticketStatusFilter, setTicketStatusFilter] = useState<'TODOS' | 'ABERTO' | 'FECHADO'>('TODOS');
-  const [ticketSearch, setTicketSearch] = useState('');
 
   const veiculosList = usePaginatedList<Veiculo>({
     fetcher: veiculoService.listar,
@@ -262,13 +272,9 @@ export default function Dashboard() {
 
   const ticketsVisiveis = useMemo(() => {
     const termo = ticketSearch.trim().toUpperCase();
-    return ticketsPage.data.filter((ticket) => {
-      const matchesStatus =
-        ticketStatusFilter === 'TODOS' || ticket.status === ticketStatusFilter;
-      const matchesSearch = !termo || ticket.placa.toUpperCase().includes(termo);
-      return matchesStatus && matchesSearch;
-    });
-  }, [ticketsPage.data, ticketStatusFilter, ticketSearch]);
+    if (!termo) return ticketsPage.data;
+    return ticketsPage.data.filter((ticket) => ticket.placa.toUpperCase().includes(termo));
+  }, [ticketsPage.data, ticketSearch]);
 
   const setTab = (tab: ActiveTab) => {
     setSearchParams({ tab });
@@ -452,7 +458,11 @@ export default function Dashboard() {
                     key={status}
                     type="button"
                     className={`pill-btn ${ticketStatusFilter === status ? 'active' : ''}`}
-                    onClick={() => setTicketStatusFilter(status)}
+                    onClick={() => {
+                      if (status === ticketStatusFilter) return;
+                      setTicketStatusFilter(status);
+                      setTicketsFilter((prev) => ({ ...prev, page: 0 }));
+                    }}
                   >
                     {status === 'TODOS'
                       ? 'Todos'

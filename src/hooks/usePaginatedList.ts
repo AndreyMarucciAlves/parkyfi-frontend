@@ -8,11 +8,13 @@ interface UsePaginatedListOptions<T> {
   enabled: boolean;
   refreshToken: number;
   errorMessage: string;
+  // Identifica filtros extras do fetcher; quando muda, a listagem é buscada novamente
+  queryKey?: string;
 }
 
 /**
  * Controla uma listagem paginada, buscando apenas quando ela está ativa
- * e quando o filtro ou o refreshToken mudam.
+ * e quando o filtro, os filtros extras ou o refreshToken mudam.
  */
 export function usePaginatedList<T>({
   fetcher,
@@ -20,6 +22,7 @@ export function usePaginatedList<T>({
   enabled,
   refreshToken,
   errorMessage,
+  queryKey = '',
 }: UsePaginatedListOptions<T>) {
   const [filter, setFilter] = useState<FilterPageable>(initialFilter);
   const [page, setPage] = useState<ResponsePagedCommom<T>>({
@@ -33,6 +36,7 @@ export function usePaginatedList<T>({
 
   const requestKey = [
     refreshToken,
+    queryKey,
     filter.page,
     filter.size,
     filter.direction,
